@@ -41,6 +41,7 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
     # Fan Pressure Ratio and Bypass Ratio
     prob.set_val("fan.PR", 1.6)
     prob.set_val("splitter.BPR", 5.1)
+    prob.model.add_design_var('lpc.PR', lower=1.8, upper=5.0)
 
     # Rotor Speeds
     prob.set_val("N1", 5490.0, units="rpm")

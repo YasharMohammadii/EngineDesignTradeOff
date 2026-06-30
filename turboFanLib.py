@@ -103,12 +103,25 @@ class CFM56_3C1(pyc.Cycle):
         self.connect('burner.Wfuel', 'performance.Wfuel_0')
 
         # ------------------------------------------------------------------------------ #
-        # COMPONENTS FOR LPC AND HPC WORK EQUALITY FOR A TARGET OPERATING PRESSURE RATIO
+        # COMPONENTS FOR LPC AND HPC PRESSURE RATIO SPLITS
+        # APPROACH: MINIMUM STAGE COUNT
         # ------------------------------------------------------------------------------ #
-        self.add_subsystem('comps_work_eq', om.ExecComp('W_diff = W_lpc - W_hpc', W_diff={
-                           'val': 0, 'units': 'hp'}, W_lpc={'units': 'hp'}, W_hpc={'units': 'hp'}))
-        self.connect('lpc.power', 'comps_work_eq.W_lpc')
-        self.connect('hpc.power', 'comps_work_eq.W_hpc')
+        PR_L_MAX = 1.25
+        PR_H_MAX = 1.38   # They are derived from 70 years of gas turbine physics,
+        # specifically the De Haller Diffusion Factor and Mach Number limits.
+
+        self.add_subsystem('stage_estimator', om.ExecComp(
+            ['N_total = log(lpc_PR) / log(PR_L_max) + log(hpc_PR) / log(PR_H_max)'],
+            lpc_PR={'units': None},
+            hpc_PR={'units': None},
+            PR_L_max={'val': PR_L_MAX, 'units': None},
+            PR_H_max={'val': PR_H_MAX, 'units': None}))
+
+        self.connect('lpc.PR', 'stage_estimator.lpc_PR')
+        self.connect('hpc.PR', 'stage_estimator.hpc_PR')
+
+        self.add_objective('stage_estimator.N_total')
+
         self.add_subsystem('opr_eq', om.ExecComp('hpc_PR = target_opr / (fan_PR * lpc_PR)',
                                                  target_opr={
                                                      'val': target_opr, 'units': None},
@@ -122,13 +135,10 @@ class CFM56_3C1(pyc.Cycle):
         # BALANCE COMPONENTS
         # ----------------------------------------------------------------------------- #
         bal = om.BalanceComp()
-        # BALANCE 1: LPC Pressure Ratio - for work equality
+        # BALANCE 1: LPC Pressure Ratio - for minimum stage numbers
         # HPC PR is DERIVED from OPR (not balanced)
         self.connect("opr_eq.hpc_PR", "hpc.PR")
-        bal.add_balance('PR_lpc', val=2.2, lower=1.1,
-                        upper=10.0, eq_units='hp')
-        self.connect('balance.PR_lpc', 'lpc.PR')
-        self.connect('comps_work_eq.W_diff', 'balance.lhs:PR_lpc')
+
         # BALANCE 2: HPT Pressure Ratio - for HP shaft power balance
         bal.add_balance('PR_hpt', val=4.0, lower=1.1,
                         upper=20.0, eq_units='hp')
