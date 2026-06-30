@@ -197,14 +197,29 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
         'LPT': np.sum(prob.get_val('lpt.PR'))
     }
 
-    shafts = {
+    burner_in_h = np.sum(prob.get_val('burner.Fl_I:tot:T', units='K')) * \
+        np.sum(prob.get_val('burner.Fl_I:tot:Cp', units='MJ/(kg*K)'))
+    burner_in_W = np.sum(prob.get_val('hpc.out_stat.W', units='kg/s'))
+    burner_out_h = np.sum(prob.get_val('burner.Fl_I:tot:T', units='K')) * \
+        np.sum(prob.get_val('burner.Fl_O:tot:Cp', units='MJ/(kg*K)'))
+    burner_out_W = np.sum(prob.get_val('burner.Wout', units='kg/s'))
+    burner_power = burner_out_h*burner_out_W - burner_in_h*burner_in_W
+    burner_eff = burner_power * 1e6 / fuel_power
+    mech = {
         'LP Shaft Speed': np.sum(prob.get_val('lp_shaft.Nmech', units='rpm')),
         'Fan Power': - np.sum(prob.get_val('fan.power', units='MW')),
+        'Fan Efficiency': np.sum(prob.get_val('fan.eff')),
         'LPC Power': - np.sum(prob.get_val('lpc.power', units='MW')),
+        'LPC Efficiency': np.sum(prob.get_val('lpc.eff')),
         'LPT Power': np.sum(prob.get_val('lpt.power', units='MW')),
+        'LPT Efficiency': np.sum(prob.get_val('lpt.eff')),
         'HP Shaft Speed': np.sum(prob.get_val('hp_shaft.Nmech', units='rpm')),
         'HPC Power': - np.sum(prob.get_val('hpc.power', units='MW')),
-        'HPT Power': np.sum(prob.get_val('hpt.power', units='MW'))
+        'HPC Efficiency': np.sum(prob.get_val('hpc.eff')),
+        'HPT Power': np.sum(prob.get_val('hpt.power', units='MW')),
+        'HPT Efficiency': np.sum(prob.get_val('hpt.eff')),
+        'Burner Power': burner_power,
+        'Burner Efficiency': burner_eff
     }
 
     Results = {
@@ -217,7 +232,7 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
         'Specifice Volumes': specvol,
         'Performance': performance,
         'Pressure Ratios': PRs,
-        'Shafts Parameters': shafts
+        'Mechanical Parameters': mech
     }
 
     """ SAVING RESULTS """
@@ -279,17 +294,17 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
     return Results
 
 
-def plotStage(Result, stageParameter, color='black'):
-    plt.plot([Result['Stages'][0], Result['Stages'][1], Result['Stages'][8]], [
+def plotStage(ax, Result, stageParameter, color='black'):
+    ax.plot([Result['Stages'][0], Result['Stages'][1], Result['Stages'][8]], [
         Result[stageParameter][0], Result[stageParameter][1], Result[stageParameter][8]],
         Result['Stages'][0:8], Result[stageParameter][0:8],
         marker='o', linewidth=2, color=color)
-    plt.title(stageParameter)
-    plt.grid(True, alpha=0.3)
+    ax.set_title(stageParameter)
+    ax.grid(True, alpha=0.3)
     return
 
 
-def TSdiagram(Result, Label=True, color='black'):
+def TSdiagram(ax, Result, Label=True, color='black'):
     T = []
     S = []
     L = []
@@ -299,21 +314,21 @@ def TSdiagram(Result, Label=True, color='black'):
         S.append(Result['Entropies'][i])
     for i, l in enumerate(Result['Stages']):
         L.append(Result['Stages'][i])
-    plt.plot(S[:-1], T[:-1],
-             [S[1], S[-1]], [T[1], T[-1]],
-             marker='o', linewidth=2, color=color)
+    ax.plot(S[:-1], T[:-1],
+            [S[1], S[-1]], [T[1], T[-1]],
+            marker='o', linewidth=2, color=color)
     if Label:
         for i in np.linspace(0, len(L) - 1, len(L), dtype=int):
             if L[i][0] >= '4':
-                plt.text(S[i]+20, T[i], L[i], verticalalignment='center',
-                         weight='bold', color=color)
+                ax.text(S[i]+20, T[i], L[i], verticalalignment='center',
+                        weight='bold', color=color)
             else:
-                plt.text(S[i]-20, T[i], L[i], verticalalignment='center',
-                         horizontalalignment='right', weight='bold', color=color)
-    plt.grid(True, alpha=0.3)
-    plt.xlabel('Entropy S (J/(kg*K))')
-    plt.ylabel('Static Temperature T (degC)')
-    plt.title('T-S Diagram')
+                ax.text(S[i]-20, T[i], L[i], verticalalignment='center',
+                        horizontalalignment='right', weight='bold', color=color)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlabel('Entropy S (J/(kg*K))')
+    ax.set_ylabel('Static Temperature T (degC)')
+    ax.set_title('T-S Diagram')
 
 
 def TestCaseDoc(opr_range, T4_range, num, dir='TestCasesResults', overwrite=False, Print=False):
@@ -339,35 +354,42 @@ def TestCaseDoc(opr_range, T4_range, num, dir='TestCasesResults', overwrite=Fals
                     f'[OPR = {opr}, T4 = {T4}] New case. Results added to {dir}/OPR-{opr}_T4-{T4}.json')
 
 
-def ParameterHeatMap(Label, param, opr_range, T4_range, num, plotname, dir='TestCasesResults'):
+def ParameterHeatMap(ax, Label, param, opr_range, T4_range, num, dir='TestCasesResults', aspectRatio=1):
     par = []
-    for opr in np.linspace(opr_range[0], opr_range[-1], num):
-        opr_par = []
-        for T4 in np.linspace(T4_range[0], T4_range[-1], num):
+    for T4 in np.linspace(T4_range[0], T4_range[-1], num):
+        T4_par = []
+        for opr in np.linspace(opr_range[0], opr_range[-1], num):
             Result = json.load(open(f'{dir}/OPR-{opr}_T4-{T4}.json', 'r'))
-            opr_par.append(Result[Label][param])
-        par.append(opr_par)
+            # Shape: [par in opr0, par in opr1, par in opr2, ...]
+            T4_par.append(Result[Label][param])
+        par.append(T4_par)  # Shape: [T4][opr]
+    x0 = opr_range[0] - (opr_range[-1] - opr_range[0])/2/(num - 1)
+    x1 = opr_range[-1] + (opr_range[-1] - opr_range[0])/2/(num - 1)
+    y0 = T4_range[0] - (T4_range[-1] - T4_range[0])/2/(num - 1)
+    y1 = T4_range[-1] + (T4_range[-1] - T4_range[0])/2/(num - 1)
+    p = ax.imshow(par,
+                  extent=[x0, x1, y0, y1], origin='lower')
 
-    plt.imshow(par,
-               extent=[
-                   T4_range[0] - (T4_range[-1] - T4_range[0])/2/(num - 1),
-                   T4_range[-1] + (T4_range[-1] - T4_range[0])/2/(num - 1),
-                   opr_range[0] - (opr_range[-1] - opr_range[0])/2/(num - 1),
-                   opr_range[-1] + (opr_range[-1] - opr_range[0])/2/(num - 1)])
+    X, Y = np.meshgrid(np.linspace(
+        opr_range[0], opr_range[-1], num), np.linspace(T4_range[0], T4_range[-1], num))
+    ax.contour(X, Y, par, colors='w')
 
-    plotname.set_xticks(np.linspace(T4_range[0], T4_range[-1], num))
-    plotname.set_yticks(np.linspace(opr_range[0], opr_range[-1], num))
-    plotname.set_aspect((T4_range[-1] - T4_range[0]) /
-                        (opr_range[-1] - opr_range[0]))
-    plt.xlabel('Turbine Inlet Temperature (degC)')
-    plt.ylabel('Operating Pressure Ratio')
+    ax.set_xticks([opr_range[0], opr_range[-1]])
+    ax.set_yticks([T4_range[0], T4_range[-1]])
+
+    asp = (opr_range[-1] - opr_range[0]) / \
+        (T4_range[-1] - T4_range[0])*aspectRatio
+    ax.set_aspect(asp)
+    ax.figure.colorbar(p)
+    ax.set_xlabel('OPR')
+    ax.set_ylabel('T4 (degC)')
     if type(param) == int:
-        plt.title(f'{Label}: {Result['Stages'][param]}')
+        ax.set_title(f'{Label}: {Result['Stages'][param]}')
     else:
-        plt.title(f'{Label}: {param}')
+        ax.set_title(f'{param}')
 
 
-def PVdiagram(Result, Label=True, color='black'):
+def PVdiagram(ax, Result, Label=True, color='black'):
     P = []
     V = []
     L = []
@@ -377,21 +399,21 @@ def PVdiagram(Result, Label=True, color='black'):
         V.append(Result['Entropies'][i])
     for i, l in enumerate(Result['Stages']):
         L.append(Result['Stages'][i])
-    plt.plot(V[:-1], P[:-1],
-             [V[1], V[-1]], [P[1], P[-1]],
-             marker='o', linewidth=2, color=color)
+    ax.plot(V[:-1], P[:-1],
+            [V[1], V[-1]], [P[1], P[-1]],
+            marker='o', linewidth=2, color=color)
     if Label:
         for i in np.linspace(0, len(L) - 1, len(L), dtype=int):
             if L[i][0] >= '4':
-                plt.text(V[i]+20, P[i], L[i], verticalalignment='center',
-                         weight='bold', color=color)
+                ax.text(V[i]+20, P[i], L[i], verticalalignment='center',
+                        weight='bold', color=color)
             else:
-                plt.text(V[i]-20, P[i], L[i], verticalalignment='center',
-                         horizontalalignment='right', weight='bold', color=color)
-    plt.grid(True, alpha=0.3)
-    plt.xlabel('Specifice Volume v (m**3/kg)')
-    plt.ylabel('Static Pressure P (kPa)')
-    plt.title('P-v Diagram')
+                ax.text(V[i]-20, P[i], L[i], verticalalignment='center',
+                        horizontalalignment='right', weight='bold', color=color)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlabel('Specifice Volume v (m**3/kg)')
+    ax.set_ylabel('Static Pressure P (kPa)')
+    ax.set_title('P-v Diagram')
 
 
 def readRes(opr, T4, dir=None):
@@ -403,7 +425,7 @@ def readRes(opr, T4, dir=None):
             else:
                 Result = json.load(
                     open(f'{dir}/OPR-{func(opr)}_T4-{func(T4)}.json', 'r'))
-            return Result
+                return Result
         except:
-            pass
+            continue
     return print(f'[Failed to Load Results]')
