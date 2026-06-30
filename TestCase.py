@@ -197,6 +197,16 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
         'LPT': np.sum(prob.get_val('lpt.PR'))
     }
 
+    shafts = {
+        'LP Shaft Speed': np.sum(prob.get_val('lp_shaft.Nmech', units='rpm')),
+        'Fan Power': - np.sum(prob.get_val('fan.power', units='MW')),
+        'LPC Power': - np.sum(prob.get_val('lpc.power', units='MW')),
+        'LPT Power': np.sum(prob.get_val('lpt.power', units='MW')),
+        'HP Shaft Speed': np.sum(prob.get_val('hp_shaft.Nmech', units='rpm')),
+        'HPC Power': - np.sum(prob.get_val('hpc.power', units='MW')),
+        'HPT Power': np.sum(prob.get_val('hpt.power', units='MW'))
+    }
+
     Results = {
         'Stages': stages,
         'Total Temperatures': totalTemps,
@@ -206,7 +216,8 @@ def runCase(target_opr, target_T4, Print=False, dir=None):
         'Entropies': entropies,
         'Specifice Volumes': specvol,
         'Performance': performance,
-        'Pressure Ratios': PRs
+        'Pressure Ratios': PRs,
+        'Shafts Parameters': shafts
     }
 
     """ SAVING RESULTS """
