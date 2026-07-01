@@ -304,7 +304,9 @@ def plotStage(ax, Result, stageParameter, color='black'):
     return
 
 
-def TSdiagram(ax, Result, Label=True, color='black'):
+def TSdiagram(ax, Result, Label=True, color='black', textColor=None):
+    if textColor == None:
+        textColor = color
     T = []
     S = []
     L = []
@@ -321,11 +323,13 @@ def TSdiagram(ax, Result, Label=True, color='black'):
         for i in np.linspace(0, len(L) - 1, len(L), dtype=int):
             if L[i][0] >= '4':
                 ax.text(S[i]+20, T[i], L[i], verticalalignment='center',
-                        weight='bold', color=color)
+                        weight='bold', color=textColor)
             else:
                 ax.text(S[i]-20, T[i], L[i], verticalalignment='center',
-                        horizontalalignment='right', weight='bold', color=color)
+                        horizontalalignment='right', weight='bold', color=textColor)
     ax.grid(True, alpha=0.3)
+    if Label:
+        ax.set_xlim(min(S)-0.2*(max(S)-min(S)), max(S)+0.3*(max(S)-min(S)))
     ax.set_xlabel('Entropy S (J/(kg*K))')
     ax.set_ylabel('Static Temperature T (degC)')
     ax.set_title('T-S Diagram')
@@ -389,7 +393,9 @@ def ParameterHeatMap(ax, Label, param, opr_range, T4_range, num, dir='TestCasesR
         ax.set_title(f'{param}')
 
 
-def PVdiagram(ax, Result, Label=True, color='black'):
+def PVdiagram(ax, Result, Label=True, color='black', textColor=None):
+    if textColor == None:
+        textColor = color
     P = []
     V = []
     L = []
@@ -406,11 +412,13 @@ def PVdiagram(ax, Result, Label=True, color='black'):
         for i in np.linspace(0, len(L) - 1, len(L), dtype=int):
             if L[i][0] >= '4':
                 ax.text(V[i]+20, P[i], L[i], verticalalignment='center',
-                        weight='bold', color=color)
+                        weight='bold', color=textColor)
             else:
                 ax.text(V[i]-20, P[i], L[i], verticalalignment='center',
-                        horizontalalignment='right', weight='bold', color=color)
+                        horizontalalignment='right', weight='bold', color=textColor)
     ax.grid(True, alpha=0.3)
+    if Label:
+        ax.set_xlim(min(V)-0.2*(max(V)-min(V)), max(V)+0.3*(max(V)-min(V)))
     ax.set_xlabel('Specifice Volume v (m**3/kg)')
     ax.set_ylabel('Static Pressure P (kPa)')
     ax.set_title('P-v Diagram')
@@ -429,3 +437,41 @@ def readRes(opr, T4, dir=None):
         except:
             continue
     return print(f'[Failed to Load Results]')
+
+
+def OPRinfluencePlot(ax, label, param, opr_range, T4, n, dir=None, color=None):
+    if type(T4) == int or type(T4) == float:
+        T4 = [T4]
+    for T in T4:
+        OPR = []
+        PAR = []
+        for opr in np.linspace(opr_range[0], opr_range[-1], n):
+            Result = readRes(opr, T, dir=dir)
+            PAR.append(Result[label][param])
+            OPR.append(opr)
+        ax.plot(OPR, PAR, linewidth=2, color=color)
+    ax.grid(alpha=0.3)
+    ax.set_xlabel('OPR')
+    if type(param) == int:
+        ax.set_title(f'{label}: {Result['Stages'][param]}')
+    else:
+        ax.set_title(f'{label}: {param}')
+
+
+def T4influencePlot(ax, label, param, T4_range, opr, n, dir=None, color=None):
+    if type(opr) == int or type(opr) == float:
+        opr = [opr]
+    for pr in opr:
+        T4 = []
+        PAR = []
+        for t4 in np.linspace(T4_range[0], T4_range[-1], n):
+            Result = readRes(pr, t4, dir=dir)
+            PAR.append(Result[label][param])
+            T4.append(t4)
+        ax.plot(T4, PAR, linewidth=2, color=color)
+    ax.grid(alpha=0.3)
+    ax.set_xlabel('T4 (degC)')
+    if type(param) == int:
+        ax.set_title(f'{label}: {Result['Stages'][param]}')
+    else:
+        ax.set_title(f'{label}: {param}')
