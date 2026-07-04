@@ -311,8 +311,8 @@ def TSdiagram(ax, Result, Label=True, color='black', textColor=None, alpha=1):
     T = []
     S = []
     L = []
-    for i, t in enumerate(Result['Static Temperatures']):
-        T.append(Result['Static Temperatures'][i])
+    for i, t in enumerate(Result['Total Temperatures']):
+        T.append(Result['Total Temperatures'][i])
     for i, s in enumerate(Result['Entropies']):
         S.append(Result['Entropies'][i])
     for i, l in enumerate(Result['Stages']):
@@ -327,15 +327,19 @@ def TSdiagram(ax, Result, Label=True, color='black', textColor=None, alpha=1):
             l = Label
         for i in l:
             if i >= 4:
-                ax.text(S[i]+30, T[i], L[i], verticalalignment='center',
-                        weight='bold', color=textColor)
+                if i == 6 or i == 7:
+                    ax.text(S[i]+30, T[i], L[i][0:9], verticalalignment='center',
+                            weight='bold', color=textColor)
+                else:
+                    ax.text(S[i]+30, T[i], L[i], verticalalignment='center',
+                            weight='bold', color=textColor)
             else:
                 ax.text(S[i]-30, T[i], L[i], verticalalignment='center',
                         horizontalalignment='right', weight='bold', color=textColor)
     ax.grid(True, alpha=0.3)
     ax.set_xlim(6475, 8525)
     ax.set_xlabel('Entropy S (J/(kg*K))', size=12)
-    ax.set_ylabel('Static Temperature T (degC)', size=12)
+    ax.set_ylabel('Total Temperature T (degC)', size=12)
     ax.tick_params(axis='both', labelsize=12)
     ax.set_title('T-S Diagram', weight='bold', size=14)
 
@@ -346,10 +350,10 @@ def PVdiagram(ax, Result, Label=True, color='black', textColor=None, alpha=1):
     P = []
     V = []
     L = []
-    for i, p in enumerate(Result['Static Pressures']):
-        P.append(Result['Static Pressures'][i])
+    for i, p in enumerate(Result['Total Pressures']):
+        P.append(Result['Total Pressures'][i])
     for i, v in enumerate(Result['Specifice Volumes']):
-        V.append(Result['Entropies'][i])
+        V.append(Result['Specifice Volumes'][i])
     for i, l in enumerate(Result['Stages']):
         L.append(Result['Stages'][i][3:])
     ax.plot(V[:-1], P[:-1],
@@ -361,16 +365,27 @@ def PVdiagram(ax, Result, Label=True, color='black', textColor=None, alpha=1):
         else:
             l = Label
         for i in l:
-            if i >= 4:
-                ax.text(V[i]+30, P[i], L[i], verticalalignment='center',
+            if i >= 6:
+                ax.text(V[i], P[i]+100, L[i], horizontalalignment='center', verticalalignment='bottom',
+                        weight='bold', color=textColor)
+            elif i <= 2:
+                ax.text(V[i], P[i]-50, L[i], horizontalalignment='right', verticalalignment='top',
+                        weight='bold', color=textColor)
+            elif i == 3:
+                ax.text(V[i], P[i]+50, L[i], horizontalalignment='right', verticalalignment='bottom',
+                        weight='bold', color=textColor)
+            elif i == 4:
+                ax.text(V[i], P[i]+50, L[i], horizontalalignment='left', verticalalignment='bottom',
                         weight='bold', color=textColor)
             else:
-                ax.text(V[i]-30, P[i], L[i], verticalalignment='center',
-                        horizontalalignment='right', weight='bold', color=textColor)
+                ax.text(V[i]+0.05, P[i]+50, L[i], verticalalignment='bottom',
+                        horizontalalignment='left', weight='bold', color=textColor)
     ax.grid(True, alpha=0.3)
-    ax.set_xlim(6500, 8525)
+    ax.set_xlim(-0.2, 2)
+    ax.set_ylim(-100, 3300)
     ax.set_xlabel('Specifice Volume v (m**3/kg)', size=12)
-    ax.set_ylabel('Static Pressure P (kPa)', size=12)
+    ax.set_ylabel('Total Pressure P (kPa)', size=12)
+    ax.tick_params(axis='both', labelsize=12)
     ax.set_title('P-v Diagram', weight='bold', size=14)
 
 
