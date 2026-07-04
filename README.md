@@ -1,4 +1,5 @@
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 ---
 
 # **Parametric Trade‑Off Study of High OPR versus High T4 Design Approaches for a Two‑Spool Turbofan Engine**

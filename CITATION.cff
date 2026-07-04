@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+authors:
+  - family-names: Mohammadi
+    given-names: Yashar
+title: "Parametric Trade-Off Study of High OPR versus High T4 Design Approaches for a Two-Spool Turbofan Engine"
+version: 1.0.0
+date-released: 2026-07-4
+url: "https://github.com/YasharMohammadi/EngineDesignTradeOff"
