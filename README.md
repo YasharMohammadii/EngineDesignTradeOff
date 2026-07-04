@@ -275,11 +275,11 @@ Relative to the ideal cycle, the real engine shows:
   </tbody>
 </table>
   
-<img src="Plots/T-S%20Diagram%20[OPR%20=%2030,%20T4%20=%201300°C].png" alt="T-s Diagram" width="750">
+<img src="Plots/T-S%20Diagram%20Case%20A.png" alt="T-s Diagram" width="750">
 
 The T‑s diagram shows that compressor irreversibility raises the HPC outlet total temperature by 13.43 % and entropy by 1.39 %. The LPT discharge temperature is 12.11 % lower than ideal, with 1.27 % higher entropy.
 
-<img src="Plots/P-V%20Diagram%20[OPR%20=%2030,%20T4%20=%201300°C].png" alt="P-v Diagram" width="750">
+<img src="Plots/P-V%20Diagram%20Case%20A.png" alt="P-v Diagram" width="750">
 
 The P‑v diagram indicates that the burner exit total pressure is 9.84 % below ideal, and the cumulative losses result in an LPT exit total pressure 52.67 % lower than ideal.
 
@@ -328,11 +328,11 @@ The P‑v diagram indicates that the burner exit total pressure is 9.84 % belo
   </tbody>
 </table>
     
-<img src="Plots/T-S%20Diagram%20[OPR%20=%2022,%20T4%20=%201450°C].png" alt="T-s Diagram" width="750">
+<img src="Plots/T-S%20Diagram%20Case%20B.png" alt="T-s Diagram" width="750">
 
 The burner pressure loss again equals 9.84 %, and the LPT exit total pressure is 43.69 % lower. The temperature deficit at the LPT exit is 7.96 %.
 
-<img src="Plots/P-V%20Diagram%20[OPR%20=%2022,%20T4%20=%201450°C].png" alt="P-v Diagram" width="750">
+<img src="Plots/P-V%20Diagram%20Case%20B.png" alt="P-v Diagram" width="750">
 
 Both cases demonstrate that component inefficiencies (non‑isentropic compression/expansion, burner pressure drop) shift the real cycle significantly away from the ideal, especially at high OPR where the expansion pressure ratio is already high. Nevertheless, the high‑OPR case retains a lower TSFC because the cycle’s thermodynamic advantage outweighs the losses, whereas the high‑T4 case suffers from the severe fuel‑flow penalty discussed above.
 
